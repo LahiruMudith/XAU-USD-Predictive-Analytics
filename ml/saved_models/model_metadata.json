@@ -1,0 +1,37 @@
+{
+  "model_type": "RandomForestRegressor",
+  "feature_columns": [
+    "Open",
+    "High",
+    "Low",
+    "Close",
+    "SMA_14",
+    "SMA_50",
+    "RSI_14",
+    "MACD",
+    "MACD_Signal",
+    "ATR_14"
+  ],
+  "target_column": "Target_Next_Close",
+  "train_samples": 3436,
+  "test_samples": 860,
+  "metrics": {
+    "rmse": 1488.8742,
+    "mae": 1103.8215,
+    "r2_score": -1.2183,
+    "mape_percent": 29.0274,
+    "directional_accuracy_percent": 45.12
+  },
+  "feature_importances": {
+    "Open": 0.0002,
+    "High": 0.0053,
+    "Low": 0.1232,
+    "Close": 0.8696,
+    "SMA_14": 0.0003,
+    "SMA_50": 0.0002,
+    "RSI_14": 0.0003,
+    "MACD": 0.0002,
+    "MACD_Signal": 0.0003,
+    "ATR_14": 0.0004
+  }
+}
