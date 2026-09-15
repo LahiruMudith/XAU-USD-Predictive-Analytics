@@ -830,3 +830,16 @@ select:focus {
 .hidden {
   display: none !important;
 }
+
+/* Next.js specific resets */
+html, body, #__next {
+  height: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
