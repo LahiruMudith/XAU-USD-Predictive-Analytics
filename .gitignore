@@ -42,6 +42,11 @@ next-env.d.ts
 
 # Environment Variables
 .env
+.env.*
+!.env.example
+ml/data/intraday/
+ml/saved_models/intraday/
+artifacts/
 .env.local
 .env.development.local
 .env.test.local
