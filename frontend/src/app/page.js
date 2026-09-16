@@ -105,7 +105,7 @@ export default function DashboardPage() {
   const checkHealth = useCallback(async () => {
     try {
       const data = await getHealth();
-      setBackendConnected(Boolean(data.status === "healthy"));
+      setBackendConnected(Boolean(data.status === "ok"));
     } catch {
       setBackendConnected(false);
     }
@@ -143,7 +143,7 @@ export default function DashboardPage() {
   }
 
   async function handleTwelveDataFetch(payload) {
-    const data = await fetchLiveData(payload);
+    const data = await fetchLiveData();
     loadDashboardData();
     loadPrediction(model);
     return data.message || "Live data ingested successfully.";
