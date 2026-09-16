@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XAU/USD Gold Price Prediction | ML Trading Terminal</title>
+  <!-- Google Fonts & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lightweight Charts (Candlestick Engine) -->
+  <script src="/static/lightweight-charts.standalone.production.js"></script>
+  <!-- TradingView Widget Script -->
+  
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="gold-icon">⚜</div>
+      <div>
+        <h1>XAU/USD Gold Intelligence</h1>
+        <span class="subtext">Machine Learning Market Price Prediction & Analytics</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <div class="status-badge" id="api-status">
+        <span class="status-dot"></span>
+        <span id="status-text">Connecting...</span>
+      </div>
+      <a href="https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD&interval=15" target="_blank" rel="noopener noreferrer" class="btn btn-tv-nav" id="btn-nav-tv" title="Open chart on TradingView">
+        <span class="tv-dot"></span> TradingView (OANDA)
+      </a>
+      <button class="btn btn-outline" id="btn-open-api-modal">Market Data</button>
+      <button class="btn btn-primary" id="btn-refresh-data">↻ Refresh Data</button>
+    </div>
+  </header>
+
+  <!-- Live Market Ticker -->
+  <div class="ticker-bar">
+    <div class="ticker-item">
+      <span class="label">INSTRUMENT</span>
+      <span class="val font-mono">XAU/USD (Gold)</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">LATEST CHART PRICE</span>
+      <span class="val font-mono" id="ticker-current-price">$0.00</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">24H HIGH / LOW</span>
+      <span class="val font-mono" id="ticker-high-low">$0.00 / $0.00</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">ACTIVE MODEL</span>
+      <span class="val highlight" id="ticker-active-model">15-minute direction model</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">DATA SOURCE</span>
+      <span class="val font-mono" id="data-source">Connecting to Twelve Data...</span>
+    </div>
+  </div>
+
+  <p class="data-note page-note" id="data-timestamp">Connecting to market data...</p>
+  <p class="data-note page-note">Model feed: Twelve Data XAU/USD. TradingView: OANDA:XAUUSD, 15 minutes. Prices may differ between providers.</p>
+  <!-- Main Container Grid -->
+  <main class="dashboard-container">
+    
+    <!-- Left Column: Charting Section -->
+    <section class="chart-section">
+      <div class="card chart-card">
+        <div class="card-header chart-header-row">
+          <div class="card-title-group">
+            <div class="chart-tab-group">
+              <button class="chart-tab-btn active" id="tab-btn-ml" data-chart="ml">
+                <span class="tv-icon">🕯️</span> Candlestick Terminal
+              </button>
+              <button class="chart-tab-btn" id="tab-btn-tv" data-chart="tv">
+                <span class="tv-icon">📈</span> TradingView Web (OANDA)
+              </button>
+            </div>
+            <span class="badge badge-gold" id="chart-symbol-badge">XAU/USD · 15min</span>
+          </div>
+
+          <!-- Candlestick Chart Controls (style toggle, overlays, candle count) -->
+          <div class="chart-controls" id="ml-controls">
+            <div class="style-toggle-group">
+              <button type="button" class="style-toggle-btn active" id="btn-chart-candlestick" title="Candlestick Chart">🕯️ Candles</button>
+              <button type="button" class="style-toggle-btn" id="btn-chart-line" title="Line Chart">📈 Line</button>
+            </div>
+            <label><input type="checkbox" id="toggle-sma" checked> SMA (20)</label>
+            <label><input type="checkbox" id="toggle-ema" checked> EMA (50)</label>
+            <label><input type="checkbox" id="toggle-bb" checked> Bollinger Bands</label>
+            <select id="candle-count-select">
+              <option value="50">50 Candles</option>
+              <option value="100" selected>100 Candles</option>
+              <option value="150">150 Candles</option>
+            </select>
+          </div>
+
+          <!-- TV Controls: Config modal trigger & Direct layout link -->
+          <div class="tv-controls hidden" id="tv-controls">
+            <button class="btn btn-xs btn-outline" id="btn-open-tv-modal" hidden title="Configure TradingView Chart URL">⚙ TV Config</button>
+            <a href="https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD&interval=15" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-tv" id="tv-open-link" title="Open chart layout on TradingView">
+              ↗ Open in TradingView
+            </a>
+          </div>
+        </div>
+
+        <!-- Candlestick OHLC Inspection Bar -->
+        <div class="candle-legend-bar font-mono" id="candle-legend-bar">
+          <span class="legend-badge" id="legend-interval">XAU/USD 15min</span>
+          <span class="legend-item">O: <strong id="legend-open">$0.00</strong></span>
+          <span class="legend-item">H: <strong id="legend-high">$0.00</strong></span>
+          <span class="legend-item">L: <strong id="legend-low">$0.00</strong></span>
+          <span class="legend-item">C: <strong id="legend-close">$0.00</strong></span>
+          <span class="legend-item">Change: <strong id="legend-change" class="bullish-text">+0.00 (+0.00%)</strong></span>
+        </div>
+
+        <!-- Candlestick & Technical Overlay Container -->
+        <div class="chart-wrapper ml-wrapper" id="ml-chart-wrapper">
+          <div id="mlCandleChart" class="candlestick-chart-container"></div>
+          <canvas id="priceChart" class="hidden"></canvas>
+        </div>
+
+        <!-- TV Live Chart Container -->
+        <div class="chart-wrapper tv-wrapper hidden" id="tv-chart-wrapper">
+          <div id="tradingview_widget_container" class="tradingview-container"></div>
+        </div>
+      </div>
+
+      <!-- Secondary Chart: RSI & MACD -->
+      <div class="card sub-chart-card">
+        <div class="card-header">
+          <div class="tab-group">
+            <button class="tab-btn active" data-target="rsi">RSI Indicator (14)</button>
+            <button class="tab-btn" data-target="macd">MACD (12, 26, 9)</button>
+          </div>
+          <span class="current-indicator-val font-mono" id="indicator-val">RSI: --</span>
+        </div>
+        <div class="chart-wrapper sub-wrapper">
+          <canvas id="indicatorChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: ML Prediction & Signals -->
+    <section class="prediction-section">
+      
+      <!-- Prediction Card -->
+      <div class="card prediction-card">
+        <div class="card-header">
+          <h2>Next 15-Minute Direction</h2>
+<select id="model-select" disabled aria-label="Model selection"><option value="best">Validated 15-minute model</option></select>
+        </div>
+
+        <div class="prediction-hero">
+          <div class="signal-badge neutral" id="signal-badge">WAITING</div>
+          <div class="price-display">
+            <div class="price-label">Last completed close · USD/oz</div>
+            <div class="price-number font-mono" id="pred-price">--</div>
+          </div>
+          <div class="change-display font-mono" id="pred-change">--</div>
+          <p class="forecast-window" id="forecast-window">Waiting for a completed candle...</p>
+          <p class="data-note" id="forecast-status">Loading model...</p>
+          <p class="data-note" id="risk-levels">--</p>
+        </div>
+
+        <div class="feature-metrics-grid">
+          <div class="metric-box">
+            <span class="label">RSI (14)</span>
+            <span class="val" id="metric-rsi">--</span>
+          </div>
+          <div class="metric-box">
+            <span class="label">MACD Line</span>
+            <span class="val" id="metric-macd">--</span>
+          </div>
+          <div class="metric-box">
+            <span class="label">SMA (20)</span>
+            <span class="val" id="metric-sma">--</span>
+          </div>
+          <div class="metric-box">
+            <span class="label">EMA (50)</span>
+            <span class="val" id="metric-ema">--</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="btn-predict-now">
+          ⚡ Run Live Model Inference
+        </button>
+      </div>
+
+      <!-- Interactive Scenario Simulator -->
+      <div class="card simulator-card">
+        <div class="card-header">
+          <h3>Scenario Price Simulator</h3>
+          <span class="help-text">Replace last candle hypothetically</span>
+        </div>
+        <form id="simulator-form" class="simulator-grid">
+          <div class="input-group">
+            <label for="sim-open">Open Price ($)</label>
+            <input type="number" step="0.01" id="sim-open" required>
+          </div>
+          <div class="input-group">
+            <label for="sim-high">High Price ($)</label>
+            <input type="number" step="0.01" id="sim-high" required>
+          </div>
+          <div class="input-group">
+            <label for="sim-low">Low Price ($)</label>
+            <input type="number" step="0.01" id="sim-low" required>
+          </div>
+          <div class="input-group">
+            <label for="sim-close">Close Price ($)</label>
+            <input type="number" step="0.01" id="sim-close" required>
+          </div>
+          <button type="submit" class="btn btn-outline btn-block full-width">
+            Simulate ML Reaction
+          </button>
+        </form>
+        <div class="sim-result hidden" id="sim-result">
+          <div class="sim-line">Model score: <strong id="sim-res-price">--</strong></div>
+          <div class="sim-line">Simulated Direction: <span class="badge" id="sim-res-dir">--</span></div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Bottom Section: Model Evaluation Benchmark Scoreboard -->
+  <section class="benchmark-section">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>Model Evaluation & Assignment Benchmark</h2>
+          <span class="subtext">Five chronological validation folds; final 20% held out for evaluation</span>
+        </div>
+      </div>
+      <p class="data-note panel-note" id="benchmark-note"></p>
+      <div class="training-controls"><button class="btn btn-outline" id="btn-train-model">Retrain 15-minute models</button>
+      <span id="training-status">Predictions use the saved model; retraining is separate.</span></div>
+      <div class="benchmark-grid" id="benchmark-cards">
+        <!-- Dynamically injected from API -->
+        <div class="loading-state">Loading model metrics...</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="benchmark-section">
+    <div class="card">
+      <div class="card-header"><div><h2>Gold News & Monetary Policy</h2>
+      <p class="subtext">Gold-price coverage and official Federal Reserve updates. News is context; it is not used by the direction model.</p></div></div>
+      <p class="data-note panel-note" id="news-status">Loading public feeds...</p>
+      <div class="news-grid" id="news-items">Loading news...</div>
+    </div>
+  </section>
+  <!-- Modal: Twelve Data API Settings -->
+  <div class="modal-overlay hidden" id="api-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Twelve Data API Configuration</h3>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">XAU/USD · 15-minute candles · Twelve Data. The API key is configured on the server. Only completed candles enter the forecast.</p>
+        <p class="modal-desc">The chart refreshes every 15 seconds, including the forming candle. Retraining is a separate action in the model evaluation section.</p>
+        <div class="modal-status hidden" id="modal-status-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-cancel-modal">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-fetch-api">Fetch 15-minute candles</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: TradingView Chart URL Configuration -->
+  <div class="modal-overlay hidden" id="tv-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>TradingView Chart Connection</h3>
+        <button class="modal-close" id="btn-close-tv-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Connected TradingView chart workspace. You can update the chart layout URL or market symbol below.
+        </p>
+        <div class="input-group">
+          <label for="modal-tv-url">TradingView Chart URL</label>
+          <input type="url" id="modal-tv-url" value="https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD&interval=15">
+        </div>
+        <div class="input-group">
+          <label for="modal-tv-symbol">Chart Symbol</label>
+          <input type="text" id="modal-tv-symbol" value="OANDA:XAUUSD" placeholder="e.g. OANDA:XAUUSD">
+        </div>
+        <div class="modal-status hidden" id="tv-modal-status-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-cancel-tv-modal">Close</button>
+        <button class="btn btn-primary" id="btn-save-tv-url">Apply & Reload Chart</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Machine Learning Module - Group Project Assignment | XAU/USD Gold Market Prediction System</p>
+    <p class="copyright">Built with FastAPI, Scikit-Learn, and Chart.js</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/dashboard-api.js"></script>
+</body>
+</html>
