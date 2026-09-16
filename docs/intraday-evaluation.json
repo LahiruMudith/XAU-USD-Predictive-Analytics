@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "symbol": "XAU/USD",
+  "interval": "15min",
+  "horizon_minutes": 15,
+  "selected_model": "Random Forest",
+  "feature_columns": [
+    "return_1",
+    "return_3",
+    "return_12",
+    "range_pct",
+    "body_pct",
+    "sma14_gap",
+    "sma50_gap",
+    "rsi_scaled",
+    "macd_pct",
+    "signal_pct",
+    "atr_pct",
+    "volatility_20",
+    "hour_sin",
+    "hour_cos",
+    "rsi_lag1"
+  ],
+  "rows": 4949,
+  "train_rows": 3958,
+  "test_rows": 990,
+  "cv_folds": 5,
+  "gap": 1,
+  "selection": "Highest mean balanced accuracy in 5 expanding-window folds on oldest 80%; final 20% holdout not used for selection.",
+  "target": "1 if next consecutive 15-minute close rises, 0 if it falls; flat and missing next bars excluded.",
+  "model_results": {
+    "Random Forest": {
+      "cv_balanced_accuracy": 0.6172624801031086,
+      "cv_std": 0.019526499344206298,
+      "test": {
+        "accuracy": 0.6868686868686869,
+        "balanced_accuracy": 0.6912847790507365,
+        "precision": 0.6398601398601399,
+        "recall": 0.7787234042553192,
+        "f1": 0.7024952015355086,
+        "confusion_matrix": [
+          [
+            314,
+            206
+          ],
+          [
+            104,
+            366
+          ]
+        ]
+      }
+    },
+    "SVC": {
+      "cv_balanced_accuracy": 0.5760995959977959,
+      "cv_std": 0.012018270017433186,
+      "test": {
+        "accuracy": 0.601010101010101,
+        "balanced_accuracy": 0.6089402618657938,
+        "precision": 0.5581395348837209,
+        "recall": 0.7659574468085106,
+        "f1": 0.6457399103139013,
+        "confusion_matrix": [
+          [
+            235,
+            285
+          ],
+          [
+            110,
+            360
+          ]
+        ]
+      }
+    },
+    "Majority baseline": {
+      "cv_balanced_accuracy": 0.5,
+      "cv_std": 0.0,
+      "test": {
+        "accuracy": 0.5252525252525253,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            520,
+            0
+          ],
+          [
+            470,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "trained_at": "2026-09-15T04:35:46.579409+00:00",
+  "data_start": "2026-07-25T15:00:00+00:00",
+  "data_end": "2026-09-15T04:30:00+00:00",
+  "holdout_start": "2026-09-04T20:45:00+00:00",
+  "validation_warning": "Experimental forecast; historical performance does not guarantee future accuracy.",
+  "versions": {
+    "python": "3.14.6",
+    "sklearn": "1.9.1"
+  },
+  "refit": "Selected model refitted on all labeled rows after holdout evaluation."
+}

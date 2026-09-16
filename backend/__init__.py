@@ -1,0 +1,1 @@
+"""XAU/USD application backend."""
