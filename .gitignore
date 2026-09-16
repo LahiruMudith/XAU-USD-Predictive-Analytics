@@ -41,20 +41,16 @@ frontend/.vercel
 next-env.d.ts
 
 # Environment Variables
-.env
-.env.*
 !.env.example
 ml/data/intraday/
 ml/saved_models/intraday/
 artifacts/
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
 # IDE & OS
 .idea/
-.vscode/
 *.swp
 *.swo
 .DS_Store
@@ -66,3 +62,5 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+config.bat
+node_modules
