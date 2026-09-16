@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field, model_validator
-from backend.config import ROOT, MODEL_DIR, TWELVE_KEY
+from backend.config import ROOT, MODEL_DIR, TWELVE_KEY, ALLOWED_HOSTS
 from backend.market import MarketService, ProviderError
 from backend.forecast import ForecastService
 from backend.news import NewsService
@@ -17,7 +17,7 @@ from ml.src.train_intraday import train
 
 app = FastAPI(title='XAU/USD 15-Minute Analytics', version='2.0.0',
               description='Completed-candle direction forecasts, market data and news. Times are UTC.')
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1', 'testserver'])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 app.mount('/static', StaticFiles(directory=ROOT / 'frontend'), name='static')
 market = MarketService()
 forecaster = ForecastService()
