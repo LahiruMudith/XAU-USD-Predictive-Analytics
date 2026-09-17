@@ -18,7 +18,7 @@ from ml.src.train_intraday import train
 
 app = FastAPI(title='XAU/USD 15-Minute Analytics', version='2.0.0',
               description='Completed-candle direction forecasts, market data and news. Times are UTC.')
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8765", "http://127.0.0.1:8765", "*"],
@@ -26,6 +26,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 app.mount('/static', StaticFiles(directory=ROOT / 'frontend'), name='static')
 market = MarketService()
 forecaster = ForecastService()
@@ -37,6 +38,9 @@ training_job = {'status': 'idle', 'message': 'No training job running.'}
 
 @app.middleware('http')
 async def local_mutations(request: Request, call_next):
+    if request.method == 'OPTIONS':
+        response = await call_next(request)
+        return response
     if request.method == 'POST':
         origin = request.headers.get('origin')
         if request.headers.get('sec-fetch-site') == 'cross-site' and origin and 'localhost' not in origin and '127.0.0.1' not in origin:

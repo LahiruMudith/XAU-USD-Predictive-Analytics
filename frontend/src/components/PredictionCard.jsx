@@ -1,22 +1,30 @@
 "use client";
 
 export default function PredictionCard({ prediction, onPredictNow, loading }) {
+  const hasValidPrediction = prediction && typeof prediction.predicted_price === "number";
   const signal = prediction?.signal || "BULLISH";
   const isBullish = signal === "BULLISH";
-  const changeColor = (prediction?.predicted_change ?? 0) >= 0 ? "var(--bullish)" : "var(--bearish)";
-  const sign = (prediction?.predicted_change ?? 0) >= 0 ? "+" : "";
+  
+  const predPrice = hasValidPrediction ? prediction.predicted_price : 0;
+  const predChange = hasValidPrediction && typeof prediction.predicted_change === "number" ? prediction.predicted_change : 0;
+  const predPctChange = hasValidPrediction && typeof prediction.predicted_pct_change === "number" ? prediction.predicted_pct_change : 0;
+
+  const changeColor = predChange >= 0 ? "var(--bullish)" : "var(--bearish)";
+  const sign = predChange >= 0 ? "+" : "";
 
   // Helper status for RSI
-  const rsiVal = prediction?.rsi_14 ?? 50;
+  const rsiVal = typeof prediction?.rsi_14 === "number" ? prediction.rsi_14 : null;
   let rsiStatus = "Neutral";
-  if (rsiVal >= 70) rsiStatus = "Overbought";
-  else if (rsiVal <= 30) rsiStatus = "Oversold";
-  else if (rsiVal > 50) rsiStatus = "Bullish Momentum";
-  else if (rsiVal < 50) rsiStatus = "Bearish Momentum";
+  if (rsiVal !== null) {
+    if (rsiVal >= 70) rsiStatus = "Overbought";
+    else if (rsiVal <= 30) rsiStatus = "Oversold";
+    else if (rsiVal > 50) rsiStatus = "Bullish Momentum";
+    else rsiStatus = "Bearish Momentum";
+  }
 
   // Helper status for MACD
-  const macdVal = prediction?.macd ?? 0;
-  const macdStatus = macdVal >= 0 ? "Bullish Alignment" : "Bearish Alignment";
+  const macdVal = typeof prediction?.macd === "number" ? prediction.macd : null;
+  const macdStatus = macdVal !== null ? (macdVal >= 0 ? "Bullish Alignment" : "Bearish Alignment") : "Calculating...";
 
   return (
     <div className="card prediction-card">
@@ -36,45 +44,57 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
         <div className="price-display">
           <div className="price-label">Predicted Future Close (t+1)</div>
           <div className="price-number font-mono">
-            ${prediction ? prediction.predicted_price.toFixed(2) : "0.00"}
+            {hasValidPrediction ? `$${predPrice.toFixed(2)}` : "Fetching..."}
           </div>
         </div>
 
         <div className="change-display font-mono" style={{ color: changeColor }}>
-          {prediction
-            ? `${sign}$${prediction.predicted_change.toFixed(2)} (${sign}${prediction.predicted_pct_change.toFixed(2)}%)`
+          {hasValidPrediction
+            ? `${sign}$${predChange.toFixed(2)} (${sign}${predPctChange.toFixed(2)}%)`
             : "+0.00 (+0.00%)"}
         </div>
+
+        {prediction?.status === "unavailable" && (
+          <div style={{ fontSize: "0.75rem", color: "#f59e0b", marginTop: "0.5rem" }}>
+            ⚠️ {prediction.reason || "Market data unavailable for model feature generation."}
+          </div>
+        )}
       </div>
 
       <div className="feature-metrics-grid">
         <div className="metric-box">
           <span className="label">RSI (14)</span>
-          <span className="val">{prediction ? prediction.rsi_14.toFixed(1) : "--"}</span>
-          <span className="metric-status">{prediction ? rsiStatus : "Calculating..."}</span>
+          <span className="val">{rsiVal !== null ? rsiVal.toFixed(1) : "--"}</span>
+          <span className="metric-status">{rsiVal !== null ? rsiStatus : "Unavailable"}</span>
         </div>
 
         <div className="metric-box">
           <span className="label">MACD</span>
-          <span className="val">{prediction ? prediction.macd.toFixed(2) : "--"}</span>
-          <span className="metric-status">{prediction ? macdStatus : "Calculating..."}</span>
+          <span className="val">{macdVal !== null ? macdVal.toFixed(2) : "--"}</span>
+          <span className="metric-status">{macdStatus}</span>
         </div>
 
         <div className="metric-box">
           <span className="label">SMA (14)</span>
-          <span className="val">{prediction?.sma_14 ? `$${prediction.sma_14.toFixed(1)}` : (prediction?.sma_20 ? `$${prediction.sma_20.toFixed(1)}` : "--")}</span>
+          <span className="val">
+            {typeof prediction?.sma_14 === "number" ? `$${prediction.sma_14.toFixed(1)}` : (typeof prediction?.sma_20 === "number" ? `$${prediction.sma_20.toFixed(1)}` : "--")}
+          </span>
           <span className="metric-status">Short-Term Trend</span>
         </div>
 
         <div className="metric-box">
           <span className="label">SMA (50)</span>
-          <span className="val">{prediction?.sma_50 ? `$${prediction.sma_50.toFixed(1)}` : (prediction?.ema_50 ? `$${prediction.ema_50.toFixed(1)}` : "--")}</span>
+          <span className="val">
+            {typeof prediction?.sma_50 === "number" ? `$${prediction.sma_50.toFixed(1)}` : (typeof prediction?.ema_50 === "number" ? `$${prediction.ema_50.toFixed(1)}` : "--")}
+          </span>
           <span className="metric-status">Medium-Term Trend</span>
         </div>
 
         <div className="metric-box">
           <span className="label">ATR (14)</span>
-          <span className="val">{prediction?.atr_14 ? `$${prediction.atr_14.toFixed(2)}` : "--"}</span>
+          <span className="val">
+            {typeof prediction?.atr_14 === "number" ? `$${prediction.atr_14.toFixed(2)}` : "--"}
+          </span>
           <span className="metric-status">Volatility Index</span>
         </div>
 
