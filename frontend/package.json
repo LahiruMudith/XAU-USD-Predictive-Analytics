@@ -4,9 +4,9 @@
   "private": true,
   "description": "Next.js trading dashboard frontend for the XAU/USD Gold Price Prediction ML system.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start",
     "lint": "next lint"
   },
   "dependencies": {

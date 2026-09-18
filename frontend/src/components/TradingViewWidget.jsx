@@ -14,7 +14,7 @@ export default function TradingViewWidget({ symbol }) {
     function renderIframeFallback() {
       container.innerHTML = `
         <iframe
-          src="https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(symbol)}&interval=60&theme=dark&style=1&timezone=Etc%2FUTC&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=10141e"
+          src="https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(symbol)}&interval=1&theme=dark&style=1&timezone=Etc%2FUTC&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=10141e"
           style="width: 100%; height: 100%; border: none;"
           allowtransparency="true"
           scrolling="no"
@@ -29,7 +29,7 @@ export default function TradingViewWidget({ symbol }) {
           new window.TradingView.widget({
             autosize: true,
             symbol,
-            interval: "60",
+            interval: "1",
             timezone: "Etc/UTC",
             theme: "dark",
             style: "1",
@@ -41,7 +41,7 @@ export default function TradingViewWidget({ symbol }) {
             hide_side_toolbar: false,
             withdateranges: true,
             save_image: true,
-            studies: ["STD;SMA", "STD;EMA", "STD;Bollinger_Bands"],
+            studies: [],
           });
           return;
         } catch (err) {
