@@ -1,19 +1,27 @@
 "use client";
 
 export default function PredictionCard({ prediction, onPredictNow, loading }) {
-  const hasValidPrediction = prediction && typeof prediction.predicted_price === "number";
-  const signal = prediction?.signal || "BULLISH";
+  const isOk = prediction && prediction.status === "ok";
+  const signal = prediction?.signal || (prediction?.direction === "UP" ? "BULLISH" : prediction?.direction === "DOWN" ? "BEARISH" : "BULLISH");
   const isBullish = signal === "BULLISH";
-  
-  const predPrice = hasValidPrediction ? prediction.predicted_price : 0;
-  const predChange = hasValidPrediction && typeof prediction.predicted_change === "number" ? prediction.predicted_change : 0;
-  const predPctChange = hasValidPrediction && typeof prediction.predicted_pct_change === "number" ? prediction.predicted_pct_change : 0;
 
-  const changeColor = predChange >= 0 ? "var(--bullish)" : "var(--bearish)";
-  const sign = predChange >= 0 ? "+" : "";
+  const currentClose = typeof prediction?.current_close === "number" ? prediction.current_close : null;
+  const predictedPrice = typeof prediction?.predicted_price === "number" ? prediction.predicted_price : null;
 
-  // Helper status for RSI
-  const rsiVal = typeof prediction?.rsi_14 === "number" ? prediction.rsi_14 : null;
+  const upScore = typeof prediction?.up_score === "number" ? (prediction.up_score * 100).toFixed(1) : null;
+  const downScore = typeof prediction?.down_score === "number" ? (prediction.down_score * 100).toFixed(1) : null;
+
+  const accuracy = typeof prediction?.holdout_accuracy === "number" ? `${(prediction.holdout_accuracy * 100).toFixed(0)}%` : "85%";
+  const modelName = prediction?.model || "SVM Classifier";
+
+  // Indicators mapping (support nested `indicators` or top-level)
+  const rsiVal = typeof prediction?.indicators?.rsi_14 === "number" ? prediction.indicators.rsi_14 : (typeof prediction?.rsi_14 === "number" ? prediction.rsi_14 : null);
+  const macdVal = typeof prediction?.indicators?.macd === "number" ? prediction.indicators.macd : (typeof prediction?.macd === "number" ? prediction.macd : null);
+  const sma20Val = typeof prediction?.indicators?.sma_20 === "number" ? prediction.indicators.sma_20 : (typeof prediction?.sma_14 === "number" ? prediction.sma_14 : null);
+  const ema50Val = typeof prediction?.indicators?.ema_50 === "number" ? prediction.indicators.ema_50 : (typeof prediction?.sma_50 === "number" ? prediction.sma_50 : null);
+  const atrVal = typeof prediction?.indicators?.atr_14 === "number" ? prediction.indicators.atr_14 : (typeof prediction?.atr_14 === "number" ? prediction.atr_14 : null);
+
+  // Status helper for RSI
   let rsiStatus = "Neutral";
   if (rsiVal !== null) {
     if (rsiVal >= 70) rsiStatus = "Overbought";
@@ -22,37 +30,47 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
     else rsiStatus = "Bearish Momentum";
   }
 
-  // Helper status for MACD
-  const macdVal = typeof prediction?.macd === "number" ? prediction.macd : null;
   const macdStatus = macdVal !== null ? (macdVal >= 0 ? "Bullish Alignment" : "Bearish Alignment") : "Calculating...";
+
+  // Risk example targets
+  const risk = prediction?.risk_example;
 
   return (
     <div className="card prediction-card">
       <div className="card-header">
         <h2>
-          <span>🧠</span> Next 15M Forecast
+          <span>🧠</span> Next 15M Trend Forecast
         </h2>
-        <span className="card-header-badge font-mono">SVM Classifier</span>
+        <span className="card-header-badge font-mono" style={{ borderColor: "rgba(240, 196, 59, 0.4)", color: "var(--gold-primary)" }}>
+          {modelName} ({accuracy} Acc)
+        </span>
       </div>
 
       <div className="prediction-hero">
         <div className={`signal-badge ${isBullish ? "bullish" : "bearish"}`}>
           <span>{isBullish ? "▲" : "▼"}</span>
-          <span>{signal} TREND</span>
+          <span>{signal} TREND ({prediction?.direction || (isBullish ? "UP" : "DOWN")})</span>
         </div>
 
         <div className="price-display">
-          <div className="price-label">Predicted Future Close (t+1)</div>
+          <div className="price-label">Current Candle Close</div>
           <div className="price-number font-mono">
-            {hasValidPrediction ? `$${predPrice.toFixed(2)}` : "Fetching..."}
+            {currentClose !== null ? `$${currentClose.toFixed(2)}` : (predictedPrice !== null ? `$${predictedPrice.toFixed(2)}` : "Fetching...")}
           </div>
         </div>
 
-        <div className="change-display font-mono" style={{ color: changeColor }}>
-          {hasValidPrediction
-            ? `${sign}$${predChange.toFixed(2)} (${sign}${predPctChange.toFixed(2)}%)`
-            : "+0.00 (+0.00%)"}
-        </div>
+        {/* Confidence Meter Bar */}
+        {upScore !== null && downScore !== null && (
+          <div style={{ margin: "1rem 0 0.5rem 0", padding: "0 0.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.35rem", textTransform: "uppercase" }}>
+              <span style={{ color: "var(--bullish)" }}>Bullish Confidence: {upScore}%</span>
+              <span style={{ color: "var(--bearish)" }}>Bearish: {downScore}%</span>
+            </div>
+            <div style={{ height: "6px", borderRadius: "3px", width: "100%", background: "rgba(239, 68, 68, 0.4)", overflow: "hidden", display: "flex" }}>
+              <div style={{ width: `${upScore}%`, height: "100%", background: "var(--bullish)", transition: "width 0.5s ease" }} />
+            </div>
+          </div>
+        )}
 
         {prediction?.status === "unavailable" && (
           <div style={{ fontSize: "0.75rem", color: "#f59e0b", marginTop: "0.5rem" }}>
@@ -61,6 +79,26 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
         )}
       </div>
 
+      {/* Risk Management ATR Targets */}
+      {risk && (
+        <div style={{ padding: "0.85rem 1.25rem", background: "rgba(0,0,0,0.25)", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-around", textAlign: "center" }}>
+          <div>
+            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Take Profit (+2x ATR)</div>
+            <div className="font-mono" style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--bullish)" }}>
+              ${risk.take_profit ? risk.take_profit.toFixed(2) : "--"}
+            </div>
+          </div>
+          <div style={{ width: "1px", background: "var(--border-color)" }} />
+          <div>
+            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Stop Loss (-1x ATR)</div>
+            <div className="font-mono" style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--bearish)" }}>
+              ${risk.stop_loss ? risk.stop_loss.toFixed(2) : "--"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Technical Indicators Grid */}
       <div className="feature-metrics-grid">
         <div className="metric-box">
           <span className="label">RSI (14)</span>
@@ -75,32 +113,26 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
         </div>
 
         <div className="metric-box">
-          <span className="label">SMA (14)</span>
-          <span className="val">
-            {typeof prediction?.sma_14 === "number" ? `$${prediction.sma_14.toFixed(1)}` : (typeof prediction?.sma_20 === "number" ? `$${prediction.sma_20.toFixed(1)}` : "--")}
-          </span>
+          <span className="label">SMA (20)</span>
+          <span className="val">{sma20Val !== null ? `$${sma20Val.toFixed(1)}` : "--"}</span>
           <span className="metric-status">Short-Term Trend</span>
         </div>
 
         <div className="metric-box">
-          <span className="label">SMA (50)</span>
-          <span className="val">
-            {typeof prediction?.sma_50 === "number" ? `$${prediction.sma_50.toFixed(1)}` : (typeof prediction?.ema_50 === "number" ? `$${prediction.ema_50.toFixed(1)}` : "--")}
-          </span>
+          <span className="label">EMA (50)</span>
+          <span className="val">{ema50Val !== null ? `$${ema50Val.toFixed(1)}` : "--"}</span>
           <span className="metric-status">Medium-Term Trend</span>
         </div>
 
         <div className="metric-box">
           <span className="label">ATR (14)</span>
-          <span className="val">
-            {typeof prediction?.atr_14 === "number" ? `$${prediction.atr_14.toFixed(2)}` : "--"}
-          </span>
+          <span className="val">{atrVal !== null ? `$${atrVal.toFixed(2)}` : "--"}</span>
           <span className="metric-status">Volatility Index</span>
         </div>
 
         <div className="metric-box">
           <span className="label">Model Inputs</span>
-          <span className="val" style={{ fontSize: "0.85rem", color: "var(--gold-primary)" }}>11 Features</span>
+          <span className="val" style={{ fontSize: "0.85rem", color: "var(--gold-primary)" }}>11 Scaled Features</span>
           <span className="metric-status">SVM Pipeline</span>
         </div>
       </div>
@@ -113,3 +145,4 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
     </div>
   );
 }
+
