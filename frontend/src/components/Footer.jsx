@@ -1,8 +1,12 @@
 export default function Footer() {
   return (
     <footer className="footer">
-      <p>Machine Learning Module - Group Project Assignment | XAU/USD Gold Market Prediction System</p>
-      <p className="copyright">Built with FastAPI, Scikit-Learn, and Next.js</p>
+      <p className="copyright">
+        XAU/USD Gold Predictive Analytics &amp; Machine Learning Terminal
+      </p>
+      <p>
+        Powered by FastAPI • Support Vector Classifier (SVM) • Next.js App Router
+      </p>
     </footer>
   );
 }

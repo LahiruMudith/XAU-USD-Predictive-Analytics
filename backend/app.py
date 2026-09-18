@@ -6,6 +6,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field, model_validator
 from backend.config import ROOT, MODEL_DIR, TWELVE_KEY, ALLOWED_HOSTS
@@ -17,7 +18,15 @@ from ml.src.train_intraday import train
 
 app = FastAPI(title='XAU/USD 15-Minute Analytics', version='2.0.0',
               description='Completed-candle direction forecasts, market data and news. Times are UTC.')
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8765", "http://127.0.0.1:8765", "*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 app.mount('/static', StaticFiles(directory=ROOT / 'frontend'), name='static')
 market = MarketService()
 forecaster = ForecastService()
@@ -29,9 +38,12 @@ training_job = {'status': 'idle', 'message': 'No training job running.'}
 
 @app.middleware('http')
 async def local_mutations(request: Request, call_next):
+    if request.method == 'OPTIONS':
+        response = await call_next(request)
+        return response
     if request.method == 'POST':
         origin = request.headers.get('origin')
-        if request.headers.get('sec-fetch-site') == 'cross-site' or (origin and urlparse(origin).netloc != request.headers.get('host')):
+        if request.headers.get('sec-fetch-site') == 'cross-site' and origin and 'localhost' not in origin and '127.0.0.1' not in origin:
             return JSONResponse({'detail': 'Cross-origin requests are not allowed.'}, status_code=403)
     response = await call_next(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -43,7 +55,7 @@ async def local_mutations(request: Request, call_next):
 
 @app.get('/')
 def dashboard():
-    return FileResponse(ROOT / 'frontend/index.html')
+    return {'status': 'ok', 'app': 'XAU/USD Predictive Analytics API Server', 'docs': '/docs', 'frontend': 'http://localhost:3000'}
 
 
 @app.get('/api/health')
