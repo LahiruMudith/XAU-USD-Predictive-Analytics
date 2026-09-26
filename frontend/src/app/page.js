@@ -6,11 +6,7 @@ import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import PredictionCard from "@/components/PredictionCard";
 import Footer from "@/components/Footer";
-import {
-  getHealth,
-  getHistorical,
-  predictLatest,
-} from "@/lib/api";
+import { getHealth, predictLatest } from "@/lib/api";
 
 const TradingViewWidget = dynamic(() => import("@/components/TradingViewWidget"), { ssr: false });
 
@@ -18,7 +14,6 @@ const DEFAULT_TV_SYMBOL = "OANDA:XAUUSD";
 
 export default function DashboardPage() {
   const [backendConnected, setBackendConnected] = useState(false);
-  const [candles, setCandles] = useState([]);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tvSymbol, setTvSymbol] = useState(DEFAULT_TV_SYMBOL);
@@ -26,15 +21,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const storedSymbol = window.localStorage.getItem("tv_chart_symbol");
     if (storedSymbol) setTvSymbol(storedSymbol);
-  }, []);
-
-  const loadDashboardData = useCallback(async () => {
-    try {
-      const data = await getHistorical(100);
-      setCandles(data.candles || []);
-    } catch (err) {
-      console.error("Dashboard data load error:", err);
-    }
   }, []);
 
   const loadPrediction = useCallback(async () => {
@@ -60,13 +46,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     checkHealth();
-    loadDashboardData();
     loadPrediction();
-  }, [checkHealth, loadDashboardData, loadPrediction]);
+  }, [checkHealth, loadPrediction]);
 
   function handleRefresh() {
     checkHealth();
-    loadDashboardData();
     loadPrediction();
   }
 

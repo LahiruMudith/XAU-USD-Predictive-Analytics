@@ -3,10 +3,10 @@ import joblib
 import numpy as np
 import pandas as pd
 from backend.config import ROOT, MODEL_DIR
-from ml.src.intraday_features import FEATURES
+from backend.ml.feature_engineering import FEATURES
 
-PKL_MODEL_PATH = ROOT / 'ml/saved_models/gold_trend_model.pkl'
-PKL_SCALER_PATH = ROOT / 'ml/saved_models/scaler.pkl'
+PKL_MODEL_PATH = ROOT / 'ml/notebooks/gold_trend_model.pkl' if (ROOT / 'ml/notebooks/gold_trend_model.pkl').exists() else ROOT / 'ml/saved_models/gold_trend_model.pkl'
+PKL_SCALER_PATH = ROOT / 'ml/notebooks/scaler.pkl' if (ROOT / 'ml/notebooks/scaler.pkl').exists() else ROOT / 'ml/saved_models/scaler.pkl'
 
 
 class ForecastService:
@@ -120,14 +120,17 @@ class ForecastService:
         atr = float(row.atr_14) if hasattr(row, 'atr_14') and not np.isnan(row.atr_14) else 10.0
         direction = 'UP' if prediction == 1 else 'DOWN'
         sign = 1 if prediction == 1 else -1
+
+        news_warning = "⚠️ High Volatility Warning: Extreme price movement detected. Trading during high-impact news events (CPI, NFP, Fed Rate) carries elevated risk!" if (atr > 15.0 or (hasattr(row, 'atr_pct') and row.atr_pct > 0.005)) else None
+
         return {**base, 'status': 'ok', 'direction': direction, 'signal': 'BULLISH' if prediction else 'BEARISH',
             'up_score': probability, 'down_score': 1-probability if probability is not None else None,
             'score_label': 'Uncalibrated model probability; not a measured chance of success.',
             'model': meta['selected_model'], 'trained_at': meta['trained_at'], 'trained_through': meta['data_end'],
             'validation_warning': meta['validation_warning'],
+            'news_warning': news_warning,
             'model_age_days': round((now-pd.Timestamp(meta['trained_at'])).total_seconds()/86400, 2),
             'holdout_accuracy': meta['model_results'][meta['selected_model']]['test']['accuracy'],
             'indicators': {name: float(row[name]) if name in row and not np.isnan(row[name]) else 0.0 for name in ['rsi_14', 'macd', 'sma_20', 'ema_50', 'atr_14']},
             'risk_example': {'stop_loss': float(row.close-sign*atr), 'take_profit': float(row.close+sign*2*atr),
                              'label': 'Illustrative ATR levels from the last close; excludes spread and slippage.'}}
-

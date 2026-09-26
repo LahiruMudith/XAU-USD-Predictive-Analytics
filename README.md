@@ -1,4 +1,4 @@
-﻿# XAU/USD Predictive Analytics
+# XAU/USD Predictive Analytics
 
 FastAPI serves the dashboard and a separate, validated 15-minute direction model.
 
@@ -81,18 +81,10 @@ News is context only. It is not fed into the current price-based classifier. Mod
 ## Verification
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install pytest
-.\.venv\Scripts\python.exe -m pytest backend\test_app.py -q
-node --check frontend\app.js
-node --check frontend\dashboard-api.js
+python -m pip install pytest
+python -m pytest backend\test_app.py -q
 ```
 
-Optional browser integration check (requires Edge, Playwright, a running server and internet):
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install playwright
-.\.venv\Scripts\python.exe -X utf8 backend\browser_check.py
-```
 
 ## Provider access
 

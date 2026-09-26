@@ -18,9 +18,6 @@ export default function Header({ backendConnected, onRefresh }) {
       </div>
 
       <div className="nav-actions">
-        <div className="model-pill font-mono">
-          <span>🧠 SVM Model</span>
-        </div>
 
         <div className="status-badge">
           <span className="status-dot"></span>

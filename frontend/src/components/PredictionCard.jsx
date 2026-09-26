@@ -52,13 +52,6 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
           <span>{signal} TREND ({prediction?.direction || (isBullish ? "UP" : "DOWN")})</span>
         </div>
 
-        <div className="price-display">
-          <div className="price-label">Current Candle Close</div>
-          <div className="price-number font-mono">
-            {currentClose !== null ? `$${currentClose.toFixed(2)}` : (predictedPrice !== null ? `$${predictedPrice.toFixed(2)}` : "Fetching...")}
-          </div>
-        </div>
-
         {/* Confidence Meter Bar */}
         {upScore !== null && downScore !== null && (
           <div style={{ margin: "1rem 0 0.5rem 0", padding: "0 0.5rem" }}>
@@ -72,6 +65,24 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
           </div>
         )}
 
+        {/* High Risk News Warning Alert Banner (Only shown during active news / high volatility) */}
+        {isOk && prediction?.news_warning && (
+          <div style={{
+            margin: "0.75rem 0.5rem 0.25rem 0.5rem",
+            padding: "0.6rem 0.85rem",
+            borderRadius: "6px",
+            background: "rgba(245, 158, 11, 0.12)",
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            color: "#fbbf24",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            lineHeight: 1.4,
+            textAlign: "left"
+          }}>
+            {prediction.news_warning}
+          </div>
+        )}
+
         {prediction?.status === "unavailable" && (
           <div style={{ fontSize: "0.75rem", color: "#f59e0b", marginTop: "0.5rem" }}>
             ⚠️ {prediction.reason || "Market data unavailable for model feature generation."}
@@ -79,13 +90,20 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
         )}
       </div>
 
-      {/* Risk Management ATR Targets */}
+      {/* Risk Management ATR Targets & Market Price */}
       {risk && (
         <div style={{ padding: "0.85rem 1.25rem", background: "rgba(0,0,0,0.25)", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-around", textAlign: "center" }}>
           <div>
             <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Take Profit (+2x ATR)</div>
             <div className="font-mono" style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--bullish)" }}>
               ${risk.take_profit ? risk.take_profit.toFixed(2) : "--"}
+            </div>
+          </div>
+          <div style={{ width: "1px", background: "var(--border-color)" }} />
+          <div>
+            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600 }}>Market Price</div>
+            <div className="font-mono" style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--gold-primary)" }}>
+              {currentClose !== null ? `$${currentClose.toFixed(2)}` : "--"}
             </div>
           </div>
           <div style={{ width: "1px", background: "var(--border-color)" }} />

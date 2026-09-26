@@ -4,7 +4,7 @@ import time
 import httpx
 import pandas as pd
 from backend.config import DATA_DIR, ROOT, TWELVE_KEY
-from ml.src.intraday_features import clean_candles, closed_candles, engineer
+from backend.ml.feature_engineering import clean_candles, closed_candles, engineer
 
 
 class ProviderError(Exception):
