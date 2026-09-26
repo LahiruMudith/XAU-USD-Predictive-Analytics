@@ -14,7 +14,7 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from ml.src.intraday_features import FEATURES, training_rows
+from backend.ml.feature_engineering import FEATURES, training_rows
 
 
 def score(y, prediction):
@@ -37,7 +37,6 @@ def train(frame, output_dir):
         raise ValueError('Both UP and DOWN examples are required in train and holdout periods.')
     candidates = {
         'Random Forest': RandomForestClassifier(n_estimators=160, max_depth=6, min_samples_leaf=12, class_weight='balanced', random_state=42, n_jobs=2),
-        # No SVC probability=True: its internal probability fit uses shuffled CV.
         'SVC': make_pipeline(StandardScaler(), SVC(C=1.0, kernel='rbf', class_weight='balanced')),
         'Majority baseline': DummyClassifier(strategy='most_frequent')}
     results = {}
@@ -66,24 +65,9 @@ def train(frame, output_dir):
         'refit': 'Selected model refitted on all labeled rows after holdout evaluation.'}
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    # Model and metadata are one atomic bundle, so inference cannot mix versions.
     bundle_path = output_dir / 'model.joblib'
     temp = output_dir / 'model.tmp'
     joblib.dump({'model': fitted, 'metadata': metadata}, temp)
     temp.replace(bundle_path)
     (output_dir / 'metadata.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     return metadata
-
-
-if __name__ == '__main__':
-    from backend.config import MODEL_DIR
-    from backend.market import MarketService, ProviderError
-    market = MarketService()
-    try:
-        frame = market.refresh()
-        print('Downloaded', len(frame), '15-minute candles:', frame.datetime.iloc[0], 'to', frame.datetime.iloc[-1])
-        result = train(frame, MODEL_DIR)
-        print(json.dumps(result, indent=2))
-    except (ProviderError, ValueError) as exc:
-        print(str(exc))
-        raise SystemExit(1) from None
