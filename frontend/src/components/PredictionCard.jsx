@@ -42,7 +42,7 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
           <span>🧠</span> Next 15M Trend Forecast
         </h2>
         <span className="card-header-badge font-mono" style={{ borderColor: "rgba(240, 196, 59, 0.4)", color: "var(--gold-primary)" }}>
-          {modelName} ({accuracy} Acc)
+          {accuracy} Accuracy
         </span>
       </div>
 
@@ -151,7 +151,7 @@ export default function PredictionCard({ prediction, onPredictNow, loading }) {
         <div className="metric-box">
           <span className="label">Model Inputs</span>
           <span className="val" style={{ fontSize: "0.85rem", color: "var(--gold-primary)" }}>11 Scaled Features</span>
-          <span className="metric-status">SVM Pipeline</span>
+          <span className="metric-status">Feature Pipeline</span>
         </div>
       </div>
 
