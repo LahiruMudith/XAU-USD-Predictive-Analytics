@@ -5,7 +5,7 @@ export default function Footer() {
         XAU/USD Gold Predictive Analytics &amp; Machine Learning Terminal
       </p>
       <p>
-        Powered by FastAPI • Support Vector Classifier (SVM) • Next.js App Router
+        Powered by FastAPI • Machine Learning • Next.js App Router
       </p>
     </footer>
   );
