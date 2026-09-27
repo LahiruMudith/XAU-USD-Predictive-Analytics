@@ -28,12 +28,12 @@ class ForecastService:
                     metadata = {
                         'symbol': 'XAU/USD',
                         'interval': '15min',
-                        'selected_model': 'SVM (gold_trend_model.pkl)',
+                        'selected_model': 'XAU/USD Trend Predictor',
                         'trained_at': pd.Timestamp.now(tz='UTC').isoformat(),
                         'data_end': 'Notebook Saved Model',
                         'validation_warning': 'Loaded custom gold_trend_model.pkl and scaler.pkl.',
                         'model_results': {
-                            'SVM (gold_trend_model.pkl)': {'test': {'accuracy': 0.85}}
+                            'XAU/USD Trend Predictor': {'test': {'accuracy': 0.85}}
                         }
                     }
                     self.bundle = {'model': model, 'scaler': scaler, 'metadata': metadata, 'type': 'pkl'}
